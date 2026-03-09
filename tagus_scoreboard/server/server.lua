@@ -1,50 +1,94 @@
-ESX = nil
+local QBCore = exports['qb-core']:GetCoreObject()
 
-ESX = exports["es_extended"]:getSharedObject()
+local trackedJobs = {
+    {
+        job = 'police', -- job name
+        label = 'Police', -- description
+        icon = 'shield-halved', -- icons from https://fontawesome.com/
+        iconColor = 'darkblue', -- css color
+        sort = 1 -- change this to the order number you want (Ex. 3 = 3rd on the menu)
+    },
 
-local ShowNumbers = true
+    {
+        job = 'ambulance',
+        label = 'Ambulance',
+        icon = 'truck-medical',
+        iconColor = 'snow',
+        sort = 2
+    },
 
-Citizen.CreateThread( function(source)
-	local xPlayers = ESX.GetPlayers()
-	while true do
-		xPlayers = ESX.GetPlayers()
-  
-			AmbulanceConnected = 0
-			PoliceConnected = 0
-			BurgerShotConnected = 0
-			UnicornConnected = 0
-			GangsConnected = 0
-			MechanicConnected = 0
-			LawyerConnected = 0
+    {
+        job = 'fire',
+        label = 'Fire Department',
+        icon = 'fire',
+        iconColor = 'red',
+        sort = 3
+    },
 
-		
-		for i=1, #xPlayers, 1 do
-			local xPlayer = ESX.GetPlayerFromId(xPlayers[i])
-			
-			if xPlayer.job.name == 'ambulance' then
-				AmbulanceConnected = AmbulanceConnected + 1
-			end	
-			
-			if xPlayer.job.name == 'police' then
-				PoliceConnected = PoliceConnected + 1
-			end	
-			
-			if xPlayer.job.name == 'burgershot' then
-				BurgerShotConnected = BurgerShotConnected + 1
-			end
-			
-			if xPlayer.job.name == 'mechanic' then
-				MechanicConnected = MechanicConnected + 1
-			end
-			
+    {
+        job = 'mechanic',
+        label = 'Mechanic',
+        icon = 'wrench',
+        iconColor = 'ghostwhite',
+        sort = 10
+    },
 
+    {
+        job = 'burgershot',
+        label = 'BurgerShot',
+        icon = 'burger',
+        iconColor = 'darkorange',
+        sort = 20
+    },
 
-			
-		end
+    {
+        job = 'taxi',
+        label = 'Taxi',
+        icon = 'taxi',
+        iconColor = 'yellow',
+        sort = 25
+    },
+}
 
-    TriggerClientEvent('updateNumbers', -1, AmbulanceConnected, PoliceConnected, MechanicConnected, BurgerShotConnected)  -- Sending data to all clients
+table.sort(trackedJobs, function(a, b)
+    return (a.sort or 999) < (b.sort or 999)
+end)
 
-		
-		Citizen.Wait(1000 * 1) -- Update Rate
-	end
+local function GetServiceCounts()
+    local counts = {}
+
+    for _, data in ipairs(trackedJobs) do
+        counts[data.job] = 0
+    end
+
+    local players = QBCore.Functions.GetQBPlayers()
+
+    for _, Player in pairs(players) do
+        if Player.PlayerData and Player.PlayerData.job then
+            local job = Player.PlayerData.job
+
+            if job.onduty and counts[job.name] ~= nil then
+                counts[job.name] = counts[job.name] + 1
+            end
+        end
+    end
+
+    local totalPlayers = #GetPlayers()
+    local maxPlayers = GetConvarInt('sv_maxclients', 64)
+
+    return counts, totalPlayers, maxPlayers, trackedJobs
+end
+
+RegisterNetEvent('tagus_services:requestUpdate', function()
+    local src = source
+    local counts, totalPlayers, maxPlayers, jobs = GetServiceCounts()
+    TriggerClientEvent('tagus_services:updateNumbers', src, counts, totalPlayers, maxPlayers, jobs)
+end)
+
+CreateThread(function()
+    while true do
+        local counts, totalPlayers, maxPlayers, jobs = GetServiceCounts()
+        TriggerClientEvent('tagus_services:updateNumbers', -1, counts, totalPlayers, maxPlayers, jobs)
+        Wait(1000)
+    end
 end)
