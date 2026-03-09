@@ -2,11 +2,11 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local trackedJobs = {
     {
-        jobs = { 'police' },
-        label = 'Police',
-        icon = 'shield-halved',
-        iconColor = 'darkblue',
-        sort = 1
+        jobs = { 'police' }, -- job name
+        label = 'Police', -- description
+        icon = 'shield-halved', -- icons from https://fontawesome.com
+        iconColor = 'darkblue', -- css color
+        sort = 1 -- change this to the order number you want (Ex. 3 = 3rd on the menu)
     },
 
     {
