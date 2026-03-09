@@ -2,11 +2,11 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local trackedJobs = {
     {
-        job = 'police', -- job name
-        label = 'Police', -- description
-        icon = 'shield-halved', -- icons from https://fontawesome.com/
-        iconColor = 'darkblue', -- css color
-        sort = 1 -- change this to the order number you want (Ex. 3 = 3rd on the menu)
+        jobs = { 'police' },
+        label = 'Police',
+        icon = 'shield-halved',
+        iconColor = 'darkblue',
+        sort = 1
     },
 
     {
@@ -39,7 +39,8 @@ local trackedJobs = {
         icon = 'user-secret',
         iconColor = 'black',
         sort = 5,
-        visibleToJobs = { 'police', 'sheriff' }
+        visibleToJobs = { 'police', 'sheriff', 'fib' },
+        requireViewerOnDuty = true
     },
 
     {
@@ -71,33 +72,33 @@ table.sort(trackedJobs, function(a, b)
     return (a.sort or 999) < (b.sort or 999)
 end)
 
-local function CanPlayerSeeEntry(playerJobName, entry)
+local function CanPlayerSeeEntry(playerJobName, playerOnDuty, entry)
     if not entry then
         return false
     end
 
-    if type(entry.visibleToJobs) ~= 'table' then
-        return true
+    if entry.requireViewerOnDuty and not playerOnDuty then
+        return false
     end
 
-    if #entry.visibleToJobs == 0 then
-        return true
-    end
-
-    for _, allowedJob in ipairs(entry.visibleToJobs) do
-        if allowedJob == playerJobName then
-            return true
+    if type(entry.visibleToJobs) == 'table' and #entry.visibleToJobs > 0 then
+        for _, allowedJob in ipairs(entry.visibleToJobs) do
+            if allowedJob == playerJobName then
+                return true
+            end
         end
+
+        return false
     end
 
-    return false
+    return true
 end
 
-local function GetVisibleTrackedJobs(playerJobName)
+local function GetVisibleTrackedJobs(playerJobName, playerOnDuty)
     local visibleJobs = {}
 
     for _, entry in ipairs(trackedJobs) do
-        if CanPlayerSeeEntry(playerJobName, entry) then
+        if CanPlayerSeeEntry(playerJobName, playerOnDuty, entry) then
             visibleJobs[#visibleJobs + 1] = entry
         end
     end
@@ -109,17 +110,11 @@ local function GetServiceCounts(visibleTrackedJobs)
     local counts = {}
     local jobLookup = {}
 
-    if type(visibleTrackedJobs) ~= 'table' then
-        visibleTrackedJobs = {}
-    end
-
     for index, data in ipairs(visibleTrackedJobs) do
         counts[index] = 0
 
-        if type(data.jobs) == 'table' then
-            for _, jobName in ipairs(data.jobs) do
-                jobLookup[jobName] = index
-            end
+        for _, jobName in ipairs(data.jobs) do
+            jobLookup[jobName] = index
         end
     end
 
@@ -151,18 +146,20 @@ RegisterNetEvent('tagus_services:requestUpdate', function()
 
     local citizenid = 'Unknown'
     local playerJobName = 'unemployed'
+    local playerOnDuty = false
 
     if Player.PlayerData then
         if Player.PlayerData.citizenid then
             citizenid = Player.PlayerData.citizenid
         end
 
-        if Player.PlayerData.job and Player.PlayerData.job.name then
-            playerJobName = Player.PlayerData.job.name
+        if Player.PlayerData.job then
+            playerJobName = Player.PlayerData.job.name or 'unemployed'
+            playerOnDuty = Player.PlayerData.job.onduty == true
         end
     end
 
-    local visibleTrackedJobs = GetVisibleTrackedJobs(playerJobName)
+    local visibleTrackedJobs = GetVisibleTrackedJobs(playerJobName, playerOnDuty)
     local counts, totalPlayers, maxPlayers = GetServiceCounts(visibleTrackedJobs)
 
     TriggerClientEvent('tagus_services:updateNumbers', src, counts, totalPlayers, maxPlayers, visibleTrackedJobs, citizenid)
@@ -176,12 +173,14 @@ CreateThread(function()
             if Player and Player.PlayerData then
                 local src = Player.PlayerData.source
                 local playerJobName = 'unemployed'
+                local playerOnDuty = false
 
-                if Player.PlayerData.job and Player.PlayerData.job.name then
-                    playerJobName = Player.PlayerData.job.name
+                if Player.PlayerData.job then
+                    playerJobName = Player.PlayerData.job.name or 'unemployed'
+                    playerOnDuty = Player.PlayerData.job.onduty == true
                 end
 
-                local visibleTrackedJobs = GetVisibleTrackedJobs(playerJobName)
+                local visibleTrackedJobs = GetVisibleTrackedJobs(playerJobName, playerOnDuty)
                 local counts, totalPlayers, maxPlayers = GetServiceCounts(visibleTrackedJobs)
 
                 TriggerClientEvent('tagus_services:updateNumbers', src, counts, totalPlayers, maxPlayers, visibleTrackedJobs)
