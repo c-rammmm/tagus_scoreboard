@@ -1,104 +1,59 @@
-RegisterCommand('servicos', function()
-    lib.showContext('some_menu')
-end)
+local cachedCounts = {}
+local cachedTotalPlayers = 0
+local cachedMaxPlayers = 64
+local cachedJobs = {}
+local pendingOpen = false
 
-RegisterKeyMapping('servicos', 'Ver Serviços', 'keyboard', 'F9')
+local function OpenServicesMenu()
+    local options = {
+        {
+            title = 'Players Online',
+            description = ('Total: %s/%s'):format(cachedTotalPlayers, cachedMaxPlayers),
+            readOnly = true,
+            icon = 'user',
+            iconColor = 'white',
+        }
+    }
 
-RegisterNetEvent('updateNumbers')
-AddEventHandler('updateNumbers', function(ambulanceCount, policeCount, mechanicCount, burgershotCount)
-    
-    local policeState = nil
-    local ambulanceState = nil
-    local mechanicState = nil
-    local burgershotState = nil
-    
-   
-    if policeCount > 0 then
-        policeState = 'Active'
-        policeON = false
-    else
-        policeState = 'Inactive'
-        policeON = true
+    for _, data in ipairs(cachedJobs) do
+        local count = cachedCounts[data.job] or 0
+        local state = count > 0 and 'Active' or 'Inactive'
+        local disabled = count <= 0
+
+        options[#options + 1] = {
+            title = data.label,
+            description = ('Status: %s | Available: %s'):format(state, count),
+            readOnly = true,
+            icon = data.icon,
+            iconColor = data.iconColor or 'white',
+            disabled = disabled,
+        }
     end
-
-    if ambulanceCount > 0 then
-        ambulanceState = 'Active'
-        ambulanceON = false
-    else
-        ambulanceState = 'Inactive'
-        ambulanceON = true
-    end
-
-    if mechanicCount > 0 then
-        mechanicState = 'Active'
-        mechanicON = false
-    else
-        mechanicState = 'Inactive'
-        mechanicON = true
-    end
-
-    if burgershotCount > 0 then
-        burgershotState = 'Active'
-        burgershotON = false
-    else
-        burgershotState = 'Inactive'
-        burgershotON = true
-    end
-
-    
 
     lib.registerContext({
         id = 'some_menu',
-        title = 'Tagus RP',
-        options = {
-            {
-            title = 'Players Online',
-            description = 'Total: 1/64',
-            readOnly = true,
-            icon = 'user',
-            iconColor = 'darkorange',
-    
-            },
-                {
-            title = 'Police',
-            description = 'State: ' ..tostring(policeState).. ' | Workers: '..policeCount.. '/64',
-            readOnly = true,
-            icon = 'shield-halved',
-            iconColor = 'darkorange',
-            disabled = policeON,
-    
-            },
-                {
-            title = 'Ambulance',
-            description = 'State: ' ..tostring(ambulanceState).. ' | Workers: '..ambulanceCount.. '/64',
-            readOnly = true,
-            icon = 'truck-medical',
-            iconColor = 'darkorange',
-            disabled = ambulanceON,
-    
-            },
-                {
-            title = 'Mechanic',
-            description = 'State: ' ..tostring(mechanicState).. ' | Workers: '..mechanicCount.. '/64',
-            readOnly = true,
-            icon = 'wrench',
-            iconColor = 'darkorange',
-            disabled = mechanicON,
-    
-            },
-                {
-            title = 'BurgerShot',
-            description = 'State: ' ..tostring(burgershotState).. ' | Workers: '..burgershotCount.. '/64',
-            readOnly = true,
-            icon = 'burger',
-            iconColor = 'darkorange',
-            disabled = burgershotON,
-    
-            },
-        }
+        title = 'Scoreboard',
+        options = options
     })
-end)
-  
 
-  
-  
+    lib.showContext('some_menu')
+end
+
+RegisterCommand('scoreboards', function()
+    pendingOpen = true
+    TriggerServerEvent('tagus_services:requestUpdate')
+end)
+
+RegisterKeyMapping('scoreboards', 'Show Scoreboard', 'keyboard', 'F1')
+
+RegisterNetEvent('tagus_services:updateNumbers', function(counts, totalPlayers, maxPlayers, jobs)
+    cachedCounts = counts or {}
+    cachedTotalPlayers = totalPlayers or 0
+    cachedMaxPlayers = maxPlayers or 64
+    cachedJobs = jobs or {}
+
+    if pendingOpen then
+        pendingOpen = false
+        OpenServicesMenu()
+    end
+end)
