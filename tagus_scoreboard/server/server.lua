@@ -56,9 +56,14 @@ end)
 
 local function GetServiceCounts()
     local counts = {}
+    local jobLookup = {}
 
-    for _, data in ipairs(trackedJobs) do
-        counts[data.job] = 0
+    for index, data in ipairs(trackedJobs) do
+        counts[index] = 0
+
+        for _, jobName in ipairs(data.jobs) do
+            jobLookup[jobName] = index
+        end
     end
 
     local players = QBCore.Functions.GetQBPlayers()
@@ -67,8 +72,11 @@ local function GetServiceCounts()
         if Player.PlayerData and Player.PlayerData.job then
             local job = Player.PlayerData.job
 
-            if job.onduty and counts[job.name] ~= nil then
-                counts[job.name] = counts[job.name] + 1
+            if job.onduty then
+                local groupIndex = jobLookup[job.name]
+                if groupIndex then
+                    counts[groupIndex] = counts[groupIndex] + 1
+                end
             end
         end
     end
@@ -89,6 +97,6 @@ CreateThread(function()
     while true do
         local counts, totalPlayers, maxPlayers, jobs = GetServiceCounts()
         TriggerClientEvent('tagus_services:updateNumbers', -1, counts, totalPlayers, maxPlayers, jobs)
-        Wait(1000)
+        Wait(3000)
     end
 end)
