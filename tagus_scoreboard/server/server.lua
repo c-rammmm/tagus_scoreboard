@@ -2,15 +2,15 @@ local QBCore = exports['qb-core']:GetCoreObject()
 
 local trackedJobs = {
     {
-        job = 'police', -- job name
-        label = 'Police', -- description
-        icon = 'shield-halved', -- icons from https://fontawesome.com/
-        iconColor = 'darkblue', -- css color
-        sort = 1 -- change this to the order number you want (Ex. 3 = 3rd on the menu)
+        jobs = { 'police' },
+        label = 'Police',
+        icon = 'shield-halved',
+        iconColor = 'darkblue',
+        sort = 1
     },
 
     {
-        job = 'ambulance',
+        jobs = { 'ambulance' },
         label = 'Ambulance',
         icon = 'truck-medical',
         iconColor = 'snow',
@@ -18,7 +18,7 @@ local trackedJobs = {
     },
 
     {
-        job = 'fire',
+        jobs = { 'fire' },
         label = 'Fire Department',
         icon = 'fire',
         iconColor = 'red',
@@ -26,27 +26,43 @@ local trackedJobs = {
     },
 
     {
-        job = 'mechanic',
+        jobs = { 'sheriff' },
+        label = 'Blaine County Sheriff',
+        icon = 'hat-cowboy',
+        iconColor = 'white',
+        sort = 4
+    },
+
+	{
+        jobs = { 'fib' },
+        label = 'FIB',
+        icon = 'user-secret',
+        iconColor = 'black',
+        sort = 4
+    },
+
+    {
+        jobs = { 'mechanic', 'bennys', 'tirenutz' },
         label = 'Mechanic',
         icon = 'wrench',
         iconColor = 'ghostwhite',
-        sort = 10
+        sort = 5
     },
 
     {
-        job = 'burgershot',
-        label = 'BurgerShot',
-        icon = 'burger',
-        iconColor = 'darkorange',
-        sort = 20
-    },
-
-    {
-        job = 'taxi',
+        jobs = { 'taxi' },
         label = 'Taxi',
         icon = 'taxi',
         iconColor = 'yellow',
-        sort = 25
+        sort = 6
+    },
+
+    {
+        jobs = { 'burgershot' },
+        label = 'BurgerShot',
+        icon = 'burger',
+        iconColor = 'darkorange',
+        sort = 7
     },
 }
 
@@ -89,8 +105,15 @@ end
 
 RegisterNetEvent('tagus_services:requestUpdate', function()
     local src = source
+    local Player = QBCore.Functions.GetPlayer(src)
+
+    local citizenid = "Unknown"
+    if Player and Player.PlayerData and Player.PlayerData.citizenid then
+        citizenid = Player.PlayerData.citizenid
+    end
+
     local counts, totalPlayers, maxPlayers, jobs = GetServiceCounts()
-    TriggerClientEvent('tagus_services:updateNumbers', src, counts, totalPlayers, maxPlayers, jobs)
+    TriggerClientEvent('tagus_services:updateNumbers', src, counts, totalPlayers, maxPlayers, jobs, citizenid)
 end)
 
 CreateThread(function()
