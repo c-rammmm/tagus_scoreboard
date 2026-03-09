@@ -24,9 +24,3 @@ A scoreboard to FIVEM in QBCore Framework using `ox_lib`
 ## Dependencies
 - QBCore https://github.com/qbcore-framework/qb-core
 - ox_lib https://github.com/overextended/ox_lib
-
-## Changelog
-- Shows Citizen ID to different ways (optional)
-  
-<img width="344" height="607" alt="1" src="https://github.com/user-attachments/assets/79840e8b-5e2b-44bf-a159-7c9d62d5d2f9" />
-<img width="370" height="624" alt="2" src="https://github.com/user-attachments/assets/54a4dd5f-3f1f-402f-8b3e-27792df19b9d" />
