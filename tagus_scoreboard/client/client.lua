@@ -16,7 +16,7 @@ local function OpenServicesMenu()
     }
 
     for _, data in ipairs(cachedJobs) do
-        local count = cachedCounts[data.job] or 0
+        local count = cachedCounts[_] or 0
         local state = count > 0 and 'Active' or 'Inactive'
         local disabled = count <= 0
 
@@ -57,3 +57,4 @@ RegisterNetEvent('tagus_services:updateNumbers', function(counts, totalPlayers, 
         OpenServicesMenu()
     end
 end)
+
