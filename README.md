@@ -10,6 +10,8 @@ A scoreboard to FIVEM in QBCore Framework using `ox_lib`
 - Adjust sorting order how you want to view it in `ox_lib`
 - Shows group jobs (ex. mechanics) in one category (optional)
 - Shows Citizen ID
+- Hides specific jobs (ex. fib only shows to police and sheriff, but not to civilians)
+- On duty to see the specific job(s)
 
 ## How To Use
 - Press `F1` or type `/scoreboards`
